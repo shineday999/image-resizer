@@ -285,7 +285,7 @@ impl eframe::App for App {
             let mut remove: Option<usize> = None;
             egui::ScrollArea::vertical()
                 .id_salt("files")
-                .max_height(180.0)
+                .max_height(200.0)
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
                     for (i, p) in self.files.iter().enumerate() {
@@ -366,7 +366,19 @@ impl eframe::App for App {
             ui.separator();
             ui.horizontal(|ui| {
                 let can = !self.files.is_empty() && !self.running;
-                if ui.add_enabled(can, egui::Button::new("開始調整")).clicked() {
+                let btn = egui::Button::new(
+                    egui::RichText::new("▶ 開始調整")
+                        .size(30.0)
+                        .strong()
+                        .color(egui::Color32::WHITE),
+                )
+                .fill(if can {
+                    egui::Color32::from_rgb(30, 150, 60)
+                } else {
+                    egui::Color32::from_gray(90)
+                })
+                .min_size(egui::vec2(260.0, 64.0));
+                if ui.add_enabled(can, btn).clicked() {
                     self.start(ctx);
                 }
                 if self.running || self.done > 0 {
@@ -388,6 +400,25 @@ impl eframe::App for App {
                 });
         });
     }
+}
+
+fn setup_style(ctx: &egui::Context) {
+    use egui::{FontFamily, FontId, TextStyle};
+    ctx.set_pixels_per_point(1.25);
+    ctx.style_mut(|st| {
+        st.text_styles = [
+            (TextStyle::Heading, FontId::new(34.0, FontFamily::Proportional)),
+            (TextStyle::Body, FontId::new(22.0, FontFamily::Proportional)),
+            (TextStyle::Button, FontId::new(22.0, FontFamily::Proportional)),
+            (TextStyle::Small, FontId::new(18.0, FontFamily::Proportional)),
+            (TextStyle::Monospace, FontId::new(20.0, FontFamily::Monospace)),
+        ]
+        .into();
+        st.spacing.item_spacing = egui::vec2(12.0, 10.0);
+        st.spacing.button_padding = egui::vec2(14.0, 8.0);
+        st.spacing.interact_size.y = 36.0;
+        st.spacing.slider_width = 260.0;
+    });
 }
 
 fn setup_fonts(ctx: &egui::Context) {
@@ -414,7 +445,7 @@ fn setup_fonts(ctx: &egui::Context) {
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([760.0, 640.0])
+            .with_inner_size([1000.0, 820.0])
             .with_drag_and_drop(true),
         ..Default::default()
     };
@@ -423,6 +454,7 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(|cc| {
             setup_fonts(&cc.egui_ctx);
+            setup_style(&cc.egui_ctx);
             Ok(Box::new(App::new()))
         }),
     )
