@@ -368,7 +368,7 @@ impl eframe::App for App {
                 let can = !self.files.is_empty() && !self.running;
                 let btn = egui::Button::new(
                     egui::RichText::new("▶ 開始調整")
-                        .size(30.0)
+                        .size(28.0)
                         .strong()
                         .color(egui::Color32::WHITE),
                 )
@@ -404,14 +404,14 @@ impl eframe::App for App {
 
 fn setup_style(ctx: &egui::Context) {
     use egui::{FontFamily, FontId, TextStyle};
-    ctx.set_pixels_per_point(1.25);
+    ctx.set_pixels_per_point(1.1);
     ctx.style_mut(|st| {
         st.text_styles = [
-            (TextStyle::Heading, FontId::new(34.0, FontFamily::Proportional)),
-            (TextStyle::Body, FontId::new(22.0, FontFamily::Proportional)),
-            (TextStyle::Button, FontId::new(22.0, FontFamily::Proportional)),
-            (TextStyle::Small, FontId::new(18.0, FontFamily::Proportional)),
-            (TextStyle::Monospace, FontId::new(20.0, FontFamily::Monospace)),
+            (TextStyle::Heading, FontId::new(30.0, FontFamily::Proportional)),
+            (TextStyle::Body, FontId::new(20.0, FontFamily::Proportional)),
+            (TextStyle::Button, FontId::new(20.0, FontFamily::Proportional)),
+            (TextStyle::Small, FontId::new(16.0, FontFamily::Proportional)),
+            (TextStyle::Monospace, FontId::new(18.0, FontFamily::Monospace)),
         ]
         .into();
         st.spacing.item_spacing = egui::vec2(12.0, 10.0);
