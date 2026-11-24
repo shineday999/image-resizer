@@ -238,7 +238,7 @@ fn card(ui: &mut egui::Ui, title: &str, f: impl FnOnce(&mut egui::Ui)) {
     egui::Frame::none()
         .fill(Color32::WHITE)
         .rounding(egui::Rounding::same(12.0))
-        .stroke(Stroke::new(1.0, BORDER))
+        .stroke(Stroke::new(1.0_f32, BORDER))
         .inner_margin(egui::Margin::same(16.0))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
@@ -309,7 +309,7 @@ impl eframe::App for App {
             .frame(
                 egui::Frame::none()
                     .fill(Color32::WHITE)
-                    .stroke(Stroke::new(1.0, BORDER))
+                    .stroke(Stroke::new(1.0_f32, BORDER))
                     .inner_margin(egui::Margin::symmetric(24.0, 14.0)),
             )
             .show(ctx, |ui| {
@@ -358,7 +358,7 @@ impl eframe::App for App {
                 egui::Frame::none()
                     .fill(Color32::WHITE)
                     .rounding(egui::Rounding::same(12.0))
-                    .stroke(Stroke::new(1.0, BORDER))
+                    .stroke(Stroke::new(1.0_f32, BORDER))
                     .inner_margin(egui::Margin::same(16.0))
                     .show(ui, |ui| {
                         ui.set_width(ui.available_width());
@@ -617,10 +617,10 @@ fn setup_style(ctx: &egui::Context) {
     v.panel_fill = BG;
     v.window_fill = Color32::WHITE;
     v.selection.bg_fill = ACCENT;
-    v.selection.stroke = Stroke::new(1.0, Color32::WHITE);
-    v.widgets.noninteractive.fg_stroke = Stroke::new(1.0, TEXT);
-    v.widgets.inactive.fg_stroke = Stroke::new(1.0, TEXT);
-    v.widgets.hovered.fg_stroke = Stroke::new(1.0, ACCENT_DARK);
+    v.selection.stroke = Stroke::new(1.0_f32, Color32::WHITE);
+    v.widgets.noninteractive.fg_stroke = Stroke::new(1.0_f32, TEXT);
+    v.widgets.inactive.fg_stroke = Stroke::new(1.0_f32, TEXT);
+    v.widgets.hovered.fg_stroke = Stroke::new(1.0_f32, ACCENT_DARK);
     v.widgets.inactive.weak_bg_fill = Color32::from_rgb(226, 232, 243);
     v.widgets.inactive.bg_fill = Color32::from_rgb(226, 232, 243);
     v.widgets.hovered.weak_bg_fill = Color32::from_rgb(207, 219, 241);
