@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Image Resizer
+Name[zh_TW]=圖片調整工具
+Comment=Resize images (single and batch)
+Exec=/home/abc/.local/bin/image-resizer
+Icon=image-x-generic
+Terminal=false
+Categories=Graphics;
+StartupNotify=true
