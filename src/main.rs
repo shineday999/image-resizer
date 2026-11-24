@@ -72,6 +72,7 @@ fn process(
     h: u32,
     fmt: OutFmt,
     quality: u8,
+    overwrite: bool,
 ) -> Result<PathBuf, String> {
     let img = image::open(path).map_err(|e| e.to_string())?;
     let (ow, oh) = (img.width() as f64, img.height() as f64);
@@ -104,23 +105,46 @@ fn process(
         target.extensions_str()[0].to_string()
     };
 
-    let dir = match out_dir {
-        Some(d) => d.clone(),
-        None => path.parent().map(|p| p.to_path_buf()).unwrap_or_default(),
-    };
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("image");
-    let out = dir.join(format!("{}_resized.{}", stem, ext));
+    let (out, write_to) = if overwrite {
+        let dir = path.parent().map(|p| p.to_path_buf()).unwrap_or_default();
+        let out = dir.join(format!("{}.{}", stem, ext));
+        let tmp = dir.join(format!(".{}.tmp_resize", stem));
+        (out, tmp)
+    } else {
+        let dir = match out_dir {
+            Some(d) => d.clone(),
+            None => path.parent().map(|p| p.to_path_buf()).unwrap_or_default(),
+        };
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        let out = dir.join(format!("{}_resized.{}", stem, ext));
+        (out.clone(), out)
+    };
 
-    if target == ImageFormat::Jpeg {
+    let res: Result<(), String> = if target == ImageFormat::Jpeg {
         let rgb = DynamicImage::ImageRgb8(resized.to_rgb8());
-        let f = std::fs::File::create(&out).map_err(|e| e.to_string())?;
-        let enc = JpegEncoder::new_with_quality(BufWriter::new(f), quality);
-        rgb.write_with_encoder(enc).map_err(|e| e.to_string())?;
+        std::fs::File::create(&write_to)
+            .map_err(|e| e.to_string())
+            .and_then(|f| {
+                let enc = JpegEncoder::new_with_quality(BufWriter::new(f), quality);
+                rgb.write_with_encoder(enc).map_err(|e| e.to_string())
+            })
     } else {
         resized
-            .save_with_format(&out, target)
-            .map_err(|e| e.to_string())?;
+            .save_with_format(&write_to, target)
+            .map_err(|e| e.to_string())
+    };
+    if let Err(e) = res {
+        if overwrite {
+            let _ = std::fs::remove_file(&write_to);
+        }
+        return Err(e);
+    }
+    if overwrite {
+        std::fs::rename(&write_to, &out).map_err(|e| e.to_string())?;
+        if out != path {
+            let _ = std::fs::remove_file(path);
+        }
     }
     Ok(out)
 }
@@ -134,6 +158,7 @@ struct App {
     fmt: OutFmt,
     quality: u8,
     out_dir: Option<PathBuf>,
+    overwrite: bool,
     log: Vec<String>,
     rx: Option<mpsc::Receiver<Msg>>,
     done: usize,
@@ -151,6 +176,7 @@ impl App {
             fmt: OutFmt::Original,
             quality: 90,
             out_dir: None,
+            overwrite: false,
             log: vec![],
             rx: None,
             done: 0,
@@ -174,18 +200,19 @@ impl App {
         self.log.clear();
         let files = self.files.clone();
         let out_dir = self.out_dir.clone();
-        let (mode, percent, w, h, fmt, q) = (
+        let (mode, percent, w, h, fmt, q, ov) = (
             self.mode,
             self.percent,
             self.width,
             self.height,
             self.fmt,
             self.quality,
+            self.overwrite,
         );
         let ctx = ctx.clone();
         std::thread::spawn(move || {
             for p in files {
-                let msg = match process(&p, &out_dir, mode, percent, w, h, fmt, q) {
+                let msg = match process(&p, &out_dir, mode, percent, w, h, fmt, q, ov) {
                     Ok(o) => format!("OK  {}", o.display()),
                     Err(e) => format!("失敗  {}: {}", p.display(), e),
                 };
@@ -319,6 +346,7 @@ impl eframe::App for App {
                 ui.add(egui::Slider::new(&mut self.quality, 1..=100));
             });
 
+            ui.checkbox(&mut self.overwrite, "覆蓋原檔案(無法復原)");
             ui.horizontal(|ui| {
                 if ui.button("選擇輸出資料夾").clicked() {
                     if let Some(d) = rfd::FileDialog::new().pick_folder() {
@@ -329,6 +357,7 @@ impl eframe::App for App {
                     self.out_dir = None;
                 }
                 ui.label(match &self.out_dir {
+                    _ if self.overwrite => "(將覆蓋原檔案)".to_string(),
                     Some(d) => d.display().to_string(),
                     None => "(與原圖相同資料夾,檔名加 _resized)".to_string(),
                 });
